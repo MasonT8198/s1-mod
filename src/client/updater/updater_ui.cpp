@@ -19,7 +19,7 @@ namespace updater
 		this->downloading_files_.clear();
 
 		this->progress_ui_ = {game::is_headless()};
-		this->progress_ui_.set_title("S1x Updater");
+		this->progress_ui_.set_title("s1-mod Updater");
 		this->progress_ui_.show(false);
 
 		// Is it good to add artificial sleeps?

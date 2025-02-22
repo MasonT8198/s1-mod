@@ -37,7 +37,7 @@ namespace images
 				}
 			});
 
-			if (data.empty() && !utils::io::read_file(utils::string::va("s1x/images/%s.png", image->name), &data))
+			if (data.empty() && !utils::io::read_file(utils::string::va("s1/images/%s.png", image->name), &data))
 			{
 				return {};
 			}

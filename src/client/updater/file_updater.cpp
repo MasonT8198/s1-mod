@@ -127,6 +127,8 @@ namespace updater
 
 	void file_updater::run() const
 	{
+		this->migrate_to_s1_naming(); //migrate to the s1-mod folder naming, will remove eventually 
+
 		const auto data = this->base_ / "data";
 		if (!utils::io::directory_exists(data.string()))
 		{
@@ -387,6 +389,32 @@ namespace updater
 
 			std::error_code code{};
 			std::filesystem::remove_all(file, code);
+		}
+	}
+
+	void file_updater::migrate_to_s1_naming() const
+	{
+		//migrate to the s1 folder naming, will remove eventually 
+		const auto s1x_folder = (this->base_ / "s1x").string();
+		if (utils::io::directory_exists(s1x_folder))
+		{
+			const std::filesystem::path old_folder_path = s1x_folder;
+			const std::filesystem::path new_folder_path = old_folder_path.parent_path() / "s1";
+
+			try
+			{
+				if (!utils::io::directory_exists(new_folder_path.string()))
+				{
+					std::filesystem::rename(old_folder_path, new_folder_path);
+				}
+				else
+				{
+					std::filesystem::remove_all(s1x_folder);
+				}
+			}
+			catch (...)
+			{
+			}
 		}
 	}
 }

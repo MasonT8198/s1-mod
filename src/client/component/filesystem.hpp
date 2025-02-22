@@ -17,6 +17,7 @@ namespace filesystem
 		std::string buffer_;
 	};
 
+	std::string get_binary_directory();
 	std::string read_file(const std::string& path);
 	bool read_file(const std::string& path, std::string* data, std::string* real_path = nullptr);
 	bool find_file(const std::string& path, std::string* real_path);

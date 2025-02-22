@@ -123,10 +123,13 @@ namespace utils::io
 			std::filesystem::copy(src, target,
 				std::filesystem::copy_options::overwrite_existing |
 				std::filesystem::copy_options::recursive);
+			return true;
 		}
 		catch (const std::exception&)
 		{
 			return false;
 		}
+
+		return false;
 	}
 }

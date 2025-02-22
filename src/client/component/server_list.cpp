@@ -1,6 +1,7 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
 #include "game/game.hpp"
+#include "game/dvars.hpp"
 
 #include "server_list.hpp"
 #include "localized_strings.hpp"
@@ -11,6 +12,9 @@
 #include <utils/cryptography.hpp>
 #include <utils/string.hpp>
 #include <utils/hook.hpp>
+
+#define DEFAULT_MASTER_SERVER_IP "server.alterware.dev"
+#define DEFAULT_MASTER_SERVER_PORT "20810"
 
 namespace server_list
 {
@@ -305,7 +309,14 @@ namespace server_list
 
 	bool get_master_server(game::netadr_s& address)
 	{
-		return game::NET_StringToAdr("server.alterware.dev:20810", &address);
+		if (dvars::master_server_ip && dvars::master_server_port)
+		{
+			return game::NET_StringToAdr(utils::string::va("%s:%s",
+				dvars::master_server_ip->current.string, dvars::master_server_port->current.string), &address);
+		}
+
+		return game::NET_StringToAdr(utils::string::va("%s:%s",
+			DEFAULT_MASTER_SERVER_IP, DEFAULT_MASTER_SERVER_PORT), &address); //fallback
 	}
 
 	void handle_info_response(const game::netadr_s& address, const utils::info_string& info)
@@ -370,6 +381,16 @@ namespace server_list
 	public:
 		void post_unpack() override
 		{
+			if (!game::environment::is_sp())
+			{
+				scheduler::once([]()
+				{
+					// add dvars to change destination master server ip/port
+					dvars::master_server_ip = game::Dvar_RegisterString("masterServerIP", DEFAULT_MASTER_SERVER_IP, game::DVAR_FLAG_NONE);
+					dvars::master_server_port = game::Dvar_RegisterString("masterServerPort", DEFAULT_MASTER_SERVER_PORT, game::DVAR_FLAG_NONE);
+				}, scheduler::pipeline::main);
+			}
+
 			if (!game::environment::is_mp()) return;
 
 			// replace UI_RunMenuScript call in LUI_CoD_LuaCall_RefreshServerList to our refresh_servers

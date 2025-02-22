@@ -10,6 +10,7 @@
 #include "network.hpp"
 #include "scheduler.hpp"
 #include "server_list.hpp"
+#include "dvars.hpp"
 
 #include "steam/steam.hpp"
 
@@ -555,11 +556,23 @@ namespace party
 					return;
 				}
 
+				const auto is_private = info.get("isPrivate");
+				if (is_private == "1"s && dvars::get_string("password").empty())
+				{
+					const auto* error_msg = "Password is not set.";
+					console::error("%s\n", error_msg);
+					game::Com_Error(game::ERR_DROP, "%s", error_msg);
+					return;
+				}
+
 				sv_motd = info.get("sv_motd");
 
 				try
 				{
 					sv_maxclients = std::stoi(info.get("sv_maxclients"));
+					//set client sv_maxclients dvar to match server so lui scoreboard can reflect correct amount
+					auto* sv_maxclients_dvar = game::Dvar_FindVar("sv_maxclients");
+					game::Dvar_SetInt(sv_maxclients_dvar, sv_maxclients);
 				}
 				catch([[maybe_unused]] const std::exception& ex)
 				{

@@ -43,6 +43,11 @@ namespace dvars
 	game::dvar_t* com_developer = nullptr;
 	game::dvar_t* com_developer_script = nullptr;
 
+	game::dvar_t* master_server_ip = nullptr;
+	game::dvar_t* master_server_port = nullptr;
+
+	game::dvar_t* ui_showBranding = nullptr;
+
 	std::string get_dvar_string(const std::string& dvar)
 	{
 		const auto* dvar_value = game::Dvar_FindVar(dvar.data());

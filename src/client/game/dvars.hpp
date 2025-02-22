@@ -42,6 +42,11 @@ namespace dvars
 	extern game::dvar_t* com_developer;
 	extern game::dvar_t* com_developer_script;
 
+	extern game::dvar_t* master_server_ip;
+	extern game::dvar_t* master_server_port;
+
+	extern game::dvar_t* ui_showBranding;
+
 	std::string get_dvar_string(const std::string& dvar);
 	bool get_dvar_bool(const std::string& dvar);
 

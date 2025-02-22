@@ -1,6 +1,7 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
 #include "game/game.hpp"
+#include "game/dvars.hpp"
 
 #include "localized_strings.hpp"
 #include "scheduler.hpp"
@@ -46,8 +47,16 @@ namespace branding
 			ui_get_formatted_build_number_hook.create(
 				SELECT_VALUE(0x14035B3F0, 0x1404A8950), ui_get_formatted_build_number_stub);
 
+			dvars::ui_showBranding = game::Dvar_RegisterBool("ui_showBranding", false, game::DVAR_FLAG_SAVED);
+
 			scheduler::loop([]()
 			{
+				if (dvars::ui_showBranding && !dvars::ui_showBranding->current.enabled && 
+					(game::CL_IsCgameInitialized() && !game::VirtualLobby_Loaded()))
+				{
+					return;
+				}
+
 				const auto x = 4;
 				const auto y = 4;
 				const auto scale = 1.0f;

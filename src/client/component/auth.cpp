@@ -33,13 +33,6 @@ namespace auth
 
 		std::string get_hw_profile_guid()
 		{
-			auto hw_profile_path = (utils::properties::get_appdata_path() / "s1-guid.dat").generic_string();
-			if (utils::io::file_exists(hw_profile_path))
-			{
-				// Migration
-				utils::io::remove_file(hw_profile_path);
-			}
-
 			HW_PROFILE_INFO info;
 			if (!GetCurrentHwProfileA(&info))
 			{
@@ -90,7 +83,7 @@ namespace auth
 		{
 			std::string data{};
 
-			auto key_path = (utils::properties::get_appdata_path() / "s1-private.key").generic_string();
+			auto key_path = (utils::properties::get_appdata_path() / "cb-private.key").generic_string();
 			if (!utils::io::read_file(key_path, &data))
 			{
 				return false;
@@ -114,7 +107,7 @@ namespace auth
 				throw std::runtime_error("Failed to generate cryptographic key!");
 			}
 
-			auto key_path = (utils::properties::get_appdata_path() / "s1-private.key").generic_string();
+			auto key_path = (utils::properties::get_appdata_path() / "cb-private.key").generic_string();
 			if (!utils::io::write_file(key_path, key.serialize()))
 			{
 				console::error("Failed to write cryptographic key!\n");
@@ -140,7 +133,7 @@ namespace auth
 		{
 			auto key = load_or_generate_key();
 
-			auto key_path = (utils::properties::get_appdata_path() / "s1-public.key").generic_string();
+			auto key_path = (utils::properties::get_appdata_path() / "cb-public.key").generic_string();
 			if (!utils::io::write_file(key_path, key.get_public_key()))
 			{
 				console::error("Failed to write public key!\n");

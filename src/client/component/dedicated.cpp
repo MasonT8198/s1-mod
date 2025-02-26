@@ -113,45 +113,6 @@ namespace dedicated
 			game::Com_Shutdown("EXE_SERVERKILLED");
 		}
 
-		void start_map(const std::string& map_name)
-		{
-			if (game::Live_SyncOnlineDataFlags(0) > 32)
-			{
-				scheduler::once([map_name]()
-				{
-					command::execute(std::format("map {}", map_name), false);
-				}, scheduler::pipeline::main, 1s);
-
-				return;
-			}
-
-			if (!game::SV_MapExists(map_name.c_str()))
-			{
-				console::info("Map '%s' doesn't exist.\n", map_name.c_str());
-				return;
-			}
-
-			auto* current_mapname = game::Dvar_FindVar("mapname");
-			if (current_mapname && utils::string::to_lower(current_mapname->current.string) == utils::string::to_lower(map_name) && (game::SV_Loaded() && !game::VirtualLobby_Loaded()))
-			{
-				console::info("Restarting map: %s\n", map_name.c_str());
-				command::execute("map_restart", false);
-				return;
-			}
-
-			console::info("Starting map: %s\n", map_name.c_str());
-
-			auto* gametype = game::Dvar_FindVar("g_gametype");
-			if (gametype && gametype->current.string)
-			{
-				command::execute(utils::string::va("ui_gametype %s", gametype->current.string), true);
-			}
-
-			command::execute(utils::string::va("ui_mapname %s", map_name.c_str()), true);
-
-			game::SV_StartMapForParty(0, map_name.c_str(), false, false);
-		}
-
 		void gscr_is_using_match_rules_data_stub()
 		{
 			game::Scr_AddInt(0);
@@ -319,36 +280,6 @@ namespace dedicated
 
 			command::add("killserver", sv_kill_server_f);
 
-			command::add("map", [](const command::params& argument)
-			{
-				if (argument.size() != 2)
-				{
-					return;
-				}
-
-				start_map(argument[1]);
-			});
-
-			command::add("map_restart", []()
-			{
-				if (!game::SV_Loaded() || game::VirtualLobby_Loaded())
-				{
-					return;
-				}
-
-				*reinterpret_cast<int*>(0x1488692B0) = 1; // sv_map_restart
-				*reinterpret_cast<int*>(0x1488692B4) = 1; // sv_loadScripts
-				*reinterpret_cast<int*>(0x1488692B8) = 0; // sv_migrate
-				reinterpret_cast<void(*)(int)>(0x140437460)(0); // SV_CheckLoadGame
-			});
-
-			command::add("fast_restart", []()
-			{
-				if (game::SV_Loaded() && !game::VirtualLobby_Loaded())
-				{
-					game::SV_FastRestart(0);
-				}
-			});
 		}
 	};
 }

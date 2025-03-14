@@ -72,7 +72,14 @@ namespace patches
 
 		game::dvar_t* register_com_maxfps_stub(const char* name, int /*value*/, int /*min*/, int /*max*/, const unsigned int /*flags*/)
 		{
-			return game::Dvar_RegisterInt(name, 0, 0, 1000, game::DVAR_FLAG_SAVED);
+			if (game::environment::is_dedi())
+			{
+				return game::Dvar_RegisterInt(name, 85, 0, 100, game::DVAR_FLAG_NONE);
+			}
+			else
+			{
+				return game::Dvar_RegisterInt(name, 0, 0, 1000, game::DVAR_FLAG_SAVED);
+			}
 		}
 
 		game::dvar_t* register_cg_fov_stub(const char* name, float value, float min, float /*max*/, const unsigned int /*flags*/)

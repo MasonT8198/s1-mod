@@ -261,6 +261,8 @@ namespace game
 
 	WEAK symbol<int> level_time{0x0, 0x144959C2C};
 
+	WEAK symbol<int> com_frameTime{0x0, 0x147B74C58};
+
 	WEAK symbol<void*> DB_XAssetPool{0x140804690, 0x1409B40D0};
 	WEAK symbol<unsigned int> db_hashTable{0x142C3E050, 0x143716B10};
 	WEAK symbol<XAssetEntry> g_assetEntryPool{0x142CC2400, 0x14379F100};

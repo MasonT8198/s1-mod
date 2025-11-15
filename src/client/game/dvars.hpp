@@ -35,8 +35,6 @@ namespace dvars
 
 	extern game::dvar_t* r_fullbright;
 
-	extern game::dvar_t* cg_legacyCrashHandling;
-
 	extern game::dvar_t* sv_cheats;
 
 	extern game::dvar_t* com_developer;
@@ -46,6 +44,7 @@ namespace dvars
 	extern game::dvar_t* master_server_port;
 
 	extern game::dvar_t* ui_showBranding;
+	extern game::dvar_t** fs_gameDirVar;
 
 	std::string get_dvar_string(const std::string& dvar);
 	bool get_dvar_bool(const std::string& dvar);

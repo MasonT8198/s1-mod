@@ -357,12 +357,12 @@ namespace gsc
 				build = static_cast<xsk::gsc::build>(static_cast<unsigned int>(build) | static_cast<unsigned int>(xsk::gsc::build::dev_maps));
 			}
 
-			if (dvars::com_developer_script && dvars::com_developer_script->current.enabled)
+			if (dvars::com_developer_script && dvars::com_developer_script->current.integer > 0)
 			{
 				build = static_cast<xsk::gsc::build>(static_cast<unsigned int>(build) | static_cast<unsigned int>(xsk::gsc::build::dev_blocks));
 			}
 
-			gsc_ctx->init(build, []([[maybe_unused]] auto const* ctx, const auto& included_path) -> std::pair<xsk::gsc::buffer, std::vector<std::uint8_t>>
+			gsc_ctx->init(build, []([[maybe_unused]] const auto* ctx, const auto& included_path) -> std::pair<xsk::gsc::buffer, std::vector<std::uint8_t>>
 			{
 				const auto script_name = std::filesystem::path(included_path).replace_extension().string();
 
@@ -434,8 +434,11 @@ namespace gsc
 			utils::hook::call(SELECT_VALUE(0x14031AB47, 0x1403F7317), find_script);
 			utils::hook::call(SELECT_VALUE(0x14031AB57, 0x1403F7327), db_is_x_asset_default);
 
+			// Enable development options
 			dvars::com_developer = game::Dvar_RegisterInt("developer", 0, 0, 2, game::DVAR_FLAG_NONE);
-			dvars::com_developer_script = game::Dvar_RegisterBool("developer_script", false, game::DVAR_FLAG_NONE);
+			// Enable developer script comments: 0 disabled, 1 full developer script, 2 only dev scripts required by art/lighting tweaks.
+			// gsc-tool will only have one mode which supports both 1 and 2 dev blocks in the code simultaneously.
+			dvars::com_developer_script = game::Dvar_RegisterInt("developer_script", 0, 0, 2, game::DVAR_FLAG_NONE);
 
 			if (game::environment::is_sp())
 			{

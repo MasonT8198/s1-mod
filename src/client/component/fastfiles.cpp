@@ -6,9 +6,9 @@
 #include "command.hpp"
 #include "console.hpp"
 
+#include <utils/concurrency.hpp>
 #include <utils/hook.hpp>
 #include <utils/io.hpp>
-#include <utils/concurrency.hpp>
 
 namespace fastfiles
 {
@@ -18,6 +18,14 @@ namespace fastfiles
 	{
 		utils::hook::detour db_try_load_x_file_internal_hook;
 		utils::hook::detour db_find_x_asset_header_hook;
+		utils::hook::detour db_read_stream_file_hook;
+
+		int db_read_stream_file_stub(int allow_abort, int finish)
+		{
+			// always use lz4 compressor type when reading stream files
+			*game::g_compressor = game::DB_COMPRESSOR_LZX;
+			return db_read_stream_file_hook.invoke<int>(allow_abort, finish);
+		}
 
 		void db_try_load_x_file_internal(const char* zone_name, const int flags)
 		{
@@ -107,7 +115,7 @@ namespace fastfiles
 	char* reallocate_asset_pool()
 	{
 		constexpr auto element_size = get_asset_type_size(Type);
-		static char new_pool[element_size * Size] = {0};
+		static char new_pool[element_size * Size]{0};
 		assert(get_asset_type_size(Type) == game::DB_GetXAssetTypeSize(Type));
 
 		std::memmove(new_pool, game::DB_XAssetPool[Type], game::g_poolSize[Type] * element_size);
@@ -137,21 +145,6 @@ namespace fastfiles
 			db_find_x_asset_header_hook.create(game::DB_FindXAssetHeader, db_find_x_asset_header_stub);
 			dvars::g_dump_scripts = game::Dvar_RegisterBool("g_dumpScripts", false, game::DVAR_FLAG_NONE);
 
-			command::add("loadzone", [](const command::params& params)
-			{
-				if (params.size() < 2)
-				{
-					console::info("usage: loadzone <zone>\n");
-					return;
-				}
-
-				game::XZoneInfo info{};
-				info.name = params.get(1);
-				info.allocFlags = 1;
-				info.freeFlags = 0;
-				game::DB_LoadXAssets(&info, 1u, game::DBSyncMode::DB_LOAD_SYNC);
-			});
-
 			command::add("g_poolSizes", []()
 			{
 				for (auto i = 0; i < game::ASSET_TYPE_COUNT; i++)
@@ -159,6 +152,9 @@ namespace fastfiles
 					console::info("g_poolSize[%i]: %i // %s\n", i, game::g_poolSize[i], game::g_assetNames[i]);
 				}
 			});
+
+			// Allow loading of mixed compressor types
+			utils::hook::nop(SELECT_VALUE(0x1401536D7, 0x140242DF7), 2);
 
 			reallocate_asset_pool<game::ASSET_TYPE_FONT, 48>();
 
@@ -170,6 +166,31 @@ namespace fastfiles
 				utils::hook::inject(0x14026FFAC, xmodel_pool + 8);
 				utils::hook::inject(0x14027463C, xmodel_pool + 8);
 				utils::hook::inject(0x140274689, xmodel_pool + 8);
+
+				// Reallocate asset pools
+				// Disabled because it causes a crash in the main menu once you rejoin a server after
+				// disconnecting and waiting for the server to map rotating.
+#if 0
+				reallocate_asset_pool<game::ASSET_TYPE_LUA_FILE, 768>();
+				reallocate_asset_pool<game::ASSET_TYPE_WEAPON, 1400>();
+				reallocate_asset_pool<game::ASSET_TYPE_LOCALIZE_ENTRY, 27200>();
+				reallocate_asset_pool<game::ASSET_TYPE_XANIMPARTS, 11600>();
+				reallocate_asset_pool<game::ASSET_TYPE_ATTACHMENT, 256>();
+				reallocate_asset_pool<game::ASSET_TYPE_FONT, 96>();
+				reallocate_asset_pool<game::ASSET_TYPE_SNDDRIVER_GLOBALS, 4>();
+				reallocate_asset_pool<game::ASSET_TYPE_EQUIPMENT_SND_TABLE, 4>();
+				reallocate_asset_pool<game::ASSET_TYPE_SOUND, 32000>();
+				reallocate_asset_pool<game::ASSET_TYPE_LOADED_SOUND, 14000>();
+				reallocate_asset_pool<game::ASSET_TYPE_VERTEXDECL, 3072>();
+				reallocate_asset_pool<game::ASSET_TYPE_COMPUTESHADER, 1024>();
+				reallocate_asset_pool<game::ASSET_TYPE_REVERB_PRESET, 128>();
+				reallocate_asset_pool<game::ASSET_TYPE_IMPACT_FX, 40>();
+#endif
+				// Fix compressor type on streamed file load
+				db_read_stream_file_hook.create(0x14027AA70, db_read_stream_file_stub);
+
+				// Allow loading of unsigned fastfiles
+				utils::hook::nop(0x1402427A5, 2); // DB_InflateInit
 			}
 		}
 	};
